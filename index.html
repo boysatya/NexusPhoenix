@@ -1,1 +1,1893 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS PHOENIX — Event Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06070d;
+    --bg-panel:#0d0f1e;
+    --bg-panel-alt:#12142a;
+    --border:#22243f;
+    --border-soft:#1a1c34;
+    --text:#e9eaf6;
+    --text-dim:#7d80a3;
+    --text-faint:#4d5075;
 
+    --c-capital:#ff2f6d;
+    --c-droid:#ffb32e;
+    --c-silo:#9b6bff;
+    --c-oil:#ff9b3d;
+    --c-farm:#7ed957;
+    --c-resource:#35d6e0;
+    --c-supply:#2fe6a0;
+    --neutral:#6b6f95;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% -10%, #1a1042 0%, transparent 45%),
+      radial-gradient(ellipse at 100% 0%, #0a1a3a 0%, transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Chakra Petch',sans-serif;
+    min-height:100vh;
+    padding:18px 14px 60px;
+    position:relative;
+  }
+  .starfield{
+    position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;
+    background:var(--bg);
+  }
+  .star-layer{
+    position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+    background-repeat:repeat;
+  }
+  .layer1{
+    background-image:
+      radial-gradient(1.2px 1.2px at 20px 30px, rgba(255,255,255,.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 90px 120px, rgba(255,255,255,.4) 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 150px 60px, rgba(255,255,255,.45) 50%, transparent 51%),
+      radial-gradient(1px 1px at 200px 180px, rgba(255,255,255,.35) 50%, transparent 51%);
+    background-size:220px 220px;
+    animation: driftStars 90s linear infinite;
+    opacity:.5;
+  }
+  .layer2{
+    background-image:
+      radial-gradient(1.8px 1.8px at 40px 80px, rgba(155,107,255,.6) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 130px 40px, rgba(255,255,255,.55) 50%, transparent 51%),
+      radial-gradient(2px 2px at 180px 150px, rgba(53,214,224,.5) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 70px 190px, rgba(255,255,255,.5) 50%, transparent 51%);
+    background-size:260px 260px;
+    animation: driftStars 60s linear infinite reverse;
+    opacity:.65;
+  }
+  .layer3{
+    background-image:
+      radial-gradient(2.4px 2.4px at 60px 50px, rgba(255,255,255,.8) 50%, transparent 51%),
+      radial-gradient(2px 2px at 160px 100px, rgba(255,47,109,.55) 50%, transparent 51%),
+      radial-gradient(2.2px 2.2px at 100px 200px, rgba(255,255,255,.7) 50%, transparent 51%);
+    background-size:300px 300px;
+    animation: driftStars 40s linear infinite;
+    opacity:.75;
+  }
+  @keyframes driftStars{
+    from{ transform:translate(0,0); }
+    to{ transform:translate(-220px,-220px); }
+  }
+
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(4,5,10,.86);
+    backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;padding:18px;
+  }
+  .modal-overlay.hide{display:none;}
+  .modal{
+    width:100%;max-width:400px;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px 20px;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,.7);
+  }
+  .modal .eyebrow-m{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;
+    color:var(--c-resource);margin-bottom:8px;
+  }
+  .modal h2{margin:0 0 6px;font-size:20px;letter-spacing:.01em;}
+  .modal p{margin:0 0 16px;font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+  .detect-card{
+    background:linear-gradient(180deg, rgba(53,214,224,.12), rgba(53,214,224,.03));
+    border:1px solid rgba(53,214,224,.4);
+    border-radius:12px;padding:13px 14px;
+    margin-bottom:14px;cursor:pointer;
+    transition:.15s;
+  }
+  .detect-card:hover{border-color:var(--c-resource);}
+  .detect-card .dc-label{font-size:10.5px;letter-spacing:.1em;color:#8ff0f7;font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
+  .detect-card .dc-value{font-size:16px;font-weight:700;color:#fff;}
+  .or-sep{
+    display:flex;align-items:center;gap:10px;
+    color:var(--text-faint);font-size:11px;margin:14px 0 10px;
+  }
+  .or-sep::before,.or-sep::after{content:"";flex:1;height:1px;background:var(--border-soft);}
+  select{
+    width:100%;background:var(--bg-panel-alt);
+    border:1px solid var(--border-soft);color:var(--text);
+    padding:11px 12px;border-radius:9px;font-size:13.5px;
+    font-family:'Chakra Petch',sans-serif;
+    margin-bottom:12px;
+  }
+  .btn-confirm{
+    width:100%;padding:12px;border:none;border-radius:10px;
+    background:linear-gradient(90deg,var(--c-capital),#ff6b93);
+    color:#fff;font-weight:700;font-size:14px;letter-spacing:.03em;
+    cursor:pointer;font-family:'Chakra Petch',sans-serif;
+    text-transform:uppercase;
+  }
+
+  .ai-popup-modal{max-width:420px;}
+  .ai-popup-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
+  .ai-popup-head .ai-avatar{
+    width:42px;height:42px;border-radius:11px;flex:none;
+    background:rgba(155,107,255,.18);border:1px solid rgba(155,107,255,.5);
+    display:flex;align-items:center;justify-content:center;font-size:21px;
+  }
+  .ai-popup-modal .eyebrow-m{color:#9b6bff;}
+  .ai-popup-modal h2{font-size:17px;}
+  .ai-popup-points{
+    list-style:none;margin:0 0 18px;padding:0;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .ai-popup-points li{
+    display:flex;align-items:flex-start;gap:10px;
+    background:var(--bg-panel-alt);border:1px solid var(--border-soft);
+    border-left:2px solid #9b6bff;
+    border-radius:9px;padding:10px 12px;
+    font-size:13px;line-height:1.5;color:var(--text);
+  }
+  .ai-popup-points li .pt-icon{flex:none;font-size:15px;line-height:1.4;}
+  .ai-popup-modal .btn-confirm{
+    background:linear-gradient(90deg,#9b6bff,#6b4fd6);
+  }
+
+  .tz-fab{
+    position:fixed;top:16px;right:16px;z-index:40;
+    width:38px;height:38px;border-radius:50%;
+    background:var(--bg-panel);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;cursor:pointer;
+  }
+  .reminder-fab{
+    position:fixed;top:16px;right:62px;z-index:40;
+    width:38px;height:38px;border-radius:50%;
+    background:var(--bg-panel);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;cursor:pointer;transition:.15s;
+  }
+  .reminder-fab.on{
+    border-color:var(--c-supply);
+    box-shadow:0 0 14px -2px rgba(47,230,160,.6);
+    background:rgba(47,230,160,.1);
+  }
+  .export-fab{
+    position:fixed;top:16px;right:108px;z-index:40;
+    width:38px;height:38px;border-radius:50%;
+    background:var(--bg-panel);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;cursor:pointer;
+  }
+  .toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--bg-panel);border:1px solid var(--border);
+    padding:11px 18px;border-radius:10px;font-size:12.5px;
+    box-shadow:0 10px 30px -10px rgba(0,0,0,.6);
+    z-index:200;opacity:0;pointer-events:none;transition:.25s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    max-width:920px;margin:0 auto;
+    padding:26px 20px 24px;
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--bg-panel);
+    isolation:isolate;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(255,47,109,.22) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 10%, rgba(53,214,224,.18) 0%, transparent 45%),
+      radial-gradient(ellipse at 60% 100%, rgba(155,107,255,.14) 0%, transparent 55%);
+  }
+  .hero::after{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:26px 26px;
+    mask-image:radial-gradient(ellipse at 30% 0%, #000 0%, transparent 75%);
+  }
+  .scan-line{
+    position:absolute;left:0;right:0;height:1px;z-index:-1;
+    background:linear-gradient(90deg, transparent, rgba(53,214,224,.9), transparent);
+    animation:scan 5s linear infinite;
+    opacity:.6;
+  }
+  @keyframes scan{0%{top:0%;}100%{top:100%;}}
+
+  .live-dot{
+    width:7px;height:7px;border-radius:50%;flex:none;
+    background:var(--c-supply);box-shadow:0 0 10px var(--c-supply);
+    animation:pulse 1.8s infinite ease-in-out;
+  }
+
+  h1 .grad{
+    background:linear-gradient(90deg,#ff2f6d,#ffb32e,#35d6e0,#9b6bff);
+    background-size:300% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:gradflow 6s ease-in-out infinite;
+  }
+  @keyframes gradflow{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+
+  .hero-stats{
+    display:flex;gap:10px;flex-wrap:wrap;
+    margin-top:18px;
+  }
+  .hero-stat{
+    flex:1;min-width:140px;
+    background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+    border:1px solid var(--border-soft);
+    border-radius:12px;padding:11px 13px;
+    backdrop-filter:blur(6px);
+  }
+  .hs-label{
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;
+    color:var(--text-faint);margin-bottom:5px;
+  }
+  .hs-value{font-size:19px;font-weight:700;color:#fff;letter-spacing:.02em;}
+  #heroCyclePos{font-size:13.5px;white-space:nowrap;}
+  .hs-sub{font-size:11px;color:var(--text-dim);margin-top:2px;}
+  .hero-stat.accent-local .hs-value{color:#8ff0f7;}
+  .hero-stat.accent-server .hs-value{color:#ffcf8a;}
+  .hero-stat.accent-cycle .hs-value{color:#ffb9cd;}
+
+  .today-live-clock{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    color:var(--c-supply);background:rgba(47,230,160,.12);
+    padding:2px 7px;border-radius:5px;font-weight:700;
+    letter-spacing:.03em;
+  }
+
+  /* ---------- NEXUS AI OFFICER ---------- */
+  .ai-officer{
+    max-width:920px;margin:18px auto 0;
+    background:linear-gradient(180deg, rgba(155,107,255,.06), var(--bg-panel) 55%);
+    border:1px solid var(--border);
+    border-left:3px solid #9b6bff;
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .ai-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .ai-avatar{
+    width:38px;height:38px;border-radius:10px;flex:none;
+    background:rgba(155,107,255,.15);border:1px solid rgba(155,107,255,.4);
+    display:flex;align-items:center;justify-content:center;font-size:19px;
+  }
+  .ai-name{font-size:13px;font-weight:700;letter-spacing:.06em;display:flex;align-items:center;gap:8px;}
+  .ai-badge{
+    font-size:9px;letter-spacing:.1em;background:rgba(47,230,160,.15);
+    color:var(--c-supply);padding:2px 6px;border-radius:4px;font-weight:700;
+  }
+  .ai-sub{font-size:11.5px;color:var(--text-dim);margin-top:2px;}
+  .ongoing-badge{
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.08em;
+    color:#ff4d5e;font-weight:700;margin-left:6px;
+    animation:pulse 1.4s infinite ease-in-out;
+  }
+  .ai-briefing{
+    font-size:13.5px;line-height:1.6;color:var(--text);
+    background:var(--bg-panel-alt);border:1px solid var(--border-soft);
+    border-radius:10px;padding:12px 14px;margin-bottom:12px;
+    white-space:pre-line;
+  }
+  .ai-chain{
+    display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+  }
+  .ai-chain-item{
+    background:var(--bg-panel-alt);border:1px solid var(--border-soft);
+    border-radius:7px;padding:5px 9px;display:flex;flex-direction:column;gap:2px;
+    flex:1;min-width:100px;
+  }
+  .ai-chain-item .lbl{color:var(--text-faint);font-size:8.5px;letter-spacing:.08em;}
+  .ai-chain-item .val{color:#fff;font-weight:700;font-size:11px;}
+  .ai-chain-item.crit{border-color:rgba(255,47,109,.5);}
+  .ai-chain-item.crit .val{color:var(--c-capital);}
+  .ai-section-title{
+    font-size:10px;letter-spacing:.14em;color:var(--text-faint);margin-bottom:6px;
+  }
+  .ai-strategy{margin:0 0 12px;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--text-dim);}
+  .ai-strategy li::marker{color:#9b6bff;}
+  .ai-strategy li.ai-obj-title{
+    list-style:none;margin-left:-18px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+    color:#9b6bff;font-weight:700;margin-top:8px;margin-bottom:2px;
+  }
+  .ai-strategy li.ai-obj-title:first-child{margin-top:0;}
+  .ai-strategy li.ai-reminder{
+    list-style:none;margin-left:-18px;margin-top:8px;
+    background:rgba(255,179,46,.08);border:1px solid rgba(255,179,46,.3);
+    border-radius:8px;padding:8px 10px;color:var(--text-dim);font-size:12px;
+  }
+  .ai-quote{
+    font-size:11px;color:#9b6bff;text-align:center;padding-top:10px;
+    border-top:1px solid var(--border-soft);letter-spacing:.03em;
+  }
+  .ai-ask{
+    display:flex;gap:8px;margin-top:14px;
+  }
+  .ai-ask-input{
+    flex:1;background:var(--bg-panel-alt);border:1px solid var(--border-soft);
+    border-radius:9px;padding:9px 12px;color:var(--text);font-size:13px;
+    font-family:'Chakra Petch',sans-serif;outline:none;min-width:0;
+  }
+  .ai-ask-input:focus{border-color:#9b6bff;}
+  .ai-ask-input::placeholder{color:var(--text-faint);}
+  .ai-ask-btn{
+    flex:none;background:linear-gradient(90deg,#9b6bff,#6b4fd6);
+    color:#fff;border:none;border-radius:9px;padding:9px 16px;
+    font-weight:700;font-size:12.5px;cursor:pointer;
+    font-family:'Chakra Petch',sans-serif;letter-spacing:.02em;
+  }
+  .ai-answer{
+    margin-top:10px;padding:11px 13px;border-radius:9px;
+    background:rgba(155,107,255,.08);border:1px solid rgba(155,107,255,.3);
+    font-size:12.5px;line-height:1.55;color:var(--text);
+    display:none;
+  }
+  .ai-answer.show{display:block;}
+
+  /* ---------- HEADER ---------- */
+  .header{max-width:920px;margin:0 auto 20px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.25em;
+    color:var(--c-capital);
+    display:flex;align-items:center;gap:8px;
+    margin-bottom:10px;
+  }
+  .eyebrow::before{
+    content:"";width:7px;height:7px;background:var(--c-capital);
+    box-shadow:0 0 10px var(--c-capital);
+    animation:pulse 1.8s infinite ease-in-out;
+  }
+  .hazard-strip{
+    height:4px;width:100%;border-radius:2px;margin:0 0 14px;
+    background:repeating-linear-gradient(135deg,
+      var(--c-capital) 0 10px, #1a0410 10px 20px);
+    opacity:.55;
+  }
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+
+  h1{
+    font-size:clamp(28px,7vw,44px);
+    line-height:1;
+    margin:0 0 6px;
+    letter-spacing:.01em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+  h1 span{color:var(--text-faint);}
+  .sub{color:var(--text-dim);font-size:13px;margin:0;}
+
+  /* ---------- WEEK CYCLE ---------- */
+  .cycle{
+    max-width:920px;margin:22px auto 0;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+  }
+  .cycle-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.18em;color:var(--text-faint);
+    margin-bottom:10px;
+  }
+  .cycle-track{display:flex;gap:6px;}
+  .cycle-tab{
+    flex:1;
+    background:var(--bg-panel-alt);
+    border:1px solid var(--border-soft);
+    border-radius:9px;
+    padding:10px 6px;
+    text-align:center;
+    cursor:pointer;
+    transition:.15s;
+    position:relative;
+  }
+  .cycle-tab:hover{border-color:var(--text-faint);}
+  .cycle-tab .wk{font-weight:700;font-size:14px;letter-spacing:.03em;}
+  .cycle-tab .today-dot{
+    display:none;
+    position:absolute;top:-5px;right:-5px;
+    width:10px;height:10px;border-radius:50%;
+    background:var(--c-capital);
+    box-shadow:0 0 8px var(--c-capital);
+  }
+  .cycle-tab.has-today .today-dot{display:block;}
+  .cycle-tab.active{
+    background:linear-gradient(180deg,#1b1e3d,#141731);
+    border-color:var(--c-capital);
+    box-shadow:0 0 0 1px rgba(255,47,109,.25), 0 0 20px -6px rgba(255,47,109,.5);
+  }
+  .cycle-tab.active .wk{color:#fff;}
+  .cycle-tab:not(.active) .wk{color:var(--text-dim);}
+
+  .tz-banner{
+    max-width:920px;margin:12px auto 0;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:rgba(53,214,224,.08);
+    border:1px solid rgba(53,214,224,.3);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:12px;color:#a8f0f5;
+  }
+  .tz-banner b{color:#fff;}
+  .tz-banner button{
+    margin-left:auto;background:none;border:1px solid rgba(255,255,255,.25);
+    color:#fff;font-size:10.5px;padding:5px 10px;border-radius:7px;
+    cursor:pointer;font-family:'JetBrains Mono',monospace;
+  }
+
+  .today-banner{
+    max-width:920px;margin:12px auto 0;
+    display:none;
+    align-items:center;gap:10px;
+    background:linear-gradient(90deg, rgba(255,47,109,.14), transparent);
+    border:1px solid rgba(255,47,109,.35);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#ffb9cd;
+  }
+  .today-banner.show{display:flex;}
+  .today-banner b{color:#fff;}
+
+  /* ---------- LEGEND ---------- */
+  .legend{
+    max-width:920px;margin:16px auto 0;
+    display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .chip{
+    display:flex;align-items:center;gap:7px;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    padding:7px 12px;border-radius:20px;
+    font-size:12px;cursor:pointer;
+    user-select:none;
+    transition:.15s;
+    color:var(--text-dim);
+  }
+  .chip .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .chip.active{color:var(--text);border-color:var(--dot-color, var(--border));background:var(--bg-panel-alt);}
+  .chip.dimmed{opacity:.35;}
+
+  /* ---------- CALENDAR ---------- */
+  .calendar{max-width:920px;margin:18px auto 0;display:flex;flex-direction:column;gap:8px;}
+
+  .day-card{
+    position:relative;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.025), transparent 40%),
+      var(--bg-panel);
+    border:1px solid var(--border);
+    border-left:3px solid var(--border-soft);
+    border-radius:10px;
+    padding:14px 16px;
+    transition:border-color .15s;
+    overflow:hidden;
+  }
+  .day-card::before{
+    /* corner rivet / HUD bracket accents, mecha-panel style */
+    content:"";position:absolute;top:0;left:0;width:18px;height:18px;
+    border-top:2px solid var(--border-soft);border-left:2px solid var(--border-soft);
+    border-radius:10px 0 0 0;opacity:.7;pointer-events:none;
+  }
+  .day-card.is-today{
+    border-left:3px solid var(--c-capital);
+    border-color:rgba(255,47,109,.5);
+    background:
+      repeating-linear-gradient(135deg, rgba(255,47,109,.05) 0 10px, transparent 10px 20px),
+      linear-gradient(180deg, rgba(255,47,109,.08), var(--bg-panel) 45%);
+  }
+  .day-card.is-today::before{border-color:var(--c-capital);}
+
+  .day-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .day-name{font-weight:700;font-size:15px;letter-spacing:.03em;display:flex;align-items:center;gap:8px;text-transform:uppercase;}
+  .today-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;letter-spacing:.12em;
+    background:var(--c-capital);color:#1a0410;
+    padding:2px 7px;border-radius:4px;font-weight:700;
+    clip-path:polygon(4px 0,100% 0,100% 100%,0 100%,0 4px);
+  }
+  .day-count{font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;letter-spacing:.05em;}
+
+  /* timeline */
+  .timeline{
+    position:relative;height:22px;
+    margin:4px 2px 14px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .timeline .tick{
+    position:absolute;bottom:0;width:1px;height:6px;background:var(--border-soft);
+  }
+  .timeline .ticklabel{
+    position:absolute;bottom:8px;font-size:8.5px;color:var(--text-faint);
+    transform:translateX(-50%);font-family:'JetBrains Mono',monospace;
+  }
+  .timeline .evt-dot{
+    position:absolute;bottom:-4px;width:9px;height:9px;border-radius:50%;
+    transform:translateX(-50%);
+    box-shadow:0 0 8px -1px currentColor;
+    transition:opacity .15s;
+    cursor:default;
+  }
+  .timeline .evt-dot.dimmed{opacity:.15;}
+
+  /* event list */
+  .events{display:flex;flex-direction:column;gap:6px;}
+  .evt-row{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 9px;
+    border-radius:6px;
+    background:var(--bg-panel-alt);
+    border:1px solid transparent;
+    border-left:2px solid var(--border-soft);
+    transition:.15s;
+    flex-wrap:wrap;
+  }
+  .evt-row.dimmed{opacity:.25;}
+  .evt-row.soon{
+    border-color:rgba(255,179,46,.5);
+    border-left-color:var(--c-droid);
+    background:
+      repeating-linear-gradient(135deg, rgba(255,179,46,.06) 0 8px, transparent 8px 16px),
+      rgba(255,179,46,.06);
+  }
+  .evt-swatch{width:6px;align-self:stretch;border-radius:3px;flex:none;}
+  .evt-time-wrap{width:66px;flex:none;line-height:1.25;}
+  .evt-time-local{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;}
+  .evt-time-svt{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);}
+  .day-shift{
+    font-family:'JetBrains Mono',monospace;font-size:8.5px;
+    background:rgba(255,179,46,.15);color:var(--c-droid);
+    padding:1px 5px;border-radius:4px;margin-left:4px;
+    white-space:nowrap;
+  }
+  .evt-delta{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    width:44px;flex:none;color:var(--text-dim);
+    display:flex;align-items:center;gap:2px;
+  }
+  .evt-label{font-size:13px;font-weight:600;flex:1;min-width:100px;}
+  .evt-countdown{
+    display:none;
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+    color:var(--c-droid);
+    background:rgba(255,179,46,.12);
+    padding:4px 8px;border-radius:6px;
+    white-space:nowrap;
+  }
+  .evt-countdown.show{display:inline-flex;align-items:center;gap:4px;}
+
+  /* ---------- NOTES ---------- */
+  .notes{
+    max-width:920px;margin:26px auto 0;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .notes-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;cursor:pointer;
+  }
+  .notes-head h2{
+    font-size:13px;letter-spacing:.14em;margin:0;
+    font-family:'JetBrains Mono',monospace;color:var(--text-dim);
+  }
+  .notes-head .arrow{transition:.2s;color:var(--text-faint);}
+  .notes.open .notes-head .arrow{transform:rotate(180deg);}
+  .notes-body{
+    max-height:0;overflow:hidden;transition:max-height .25s ease;
+    padding:0 16px;
+  }
+  .notes.open .notes-body{max-height:900px;padding:0 16px 16px;}
+  .note-item{
+    display:flex;gap:10px;
+    padding:10px 0;
+    border-top:1px solid var(--border-soft);
+    font-size:12.5px;color:var(--text-dim);line-height:1.5;
+  }
+  .note-item:first-child{border-top:none;}
+  .note-item .n-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex:none;}
+  .note-item b{color:var(--text);}
+
+  .ref-note{
+    max-width:920px;margin:12px auto 0;
+    font-size:11px;color:var(--text-faint);text-align:center;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .evt-row.vivid{background:var(--bg-panel);border-color:var(--border-soft);}
+
+  .credit{
+    max-width:920px;margin:22px auto 0;
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.15em;
+    color:var(--text-faint);
+  }
+
+  @media (max-width:480px){
+    .evt-label{font-size:12.5px;}
+    .evt-time-local{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div class="starfield" id="starfield">
+  <div class="star-layer layer1"></div>
+  <div class="star-layer layer2"></div>
+  <div class="star-layer layer3"></div>
+</div>
+
+<div class="modal-overlay" id="tzModal">
+  <div class="modal">
+    <div class="eyebrow-m mono">SETUP · STEP 1/1</div>
+    <h2>Choose Your Timezone</h2>
+    <p>So every event time auto-converts to your phone's clock, and the countdowns stay accurate.</p>
+    <div class="detect-card" id="detectCard">
+      <div class="dc-label">✓ AUTO-DETECTED FROM YOUR PHONE</div>
+      <div class="dc-value" id="detectValue">—</div>
+    </div>
+    <div class="or-sep">or choose manually</div>
+    <select id="tzSelect"></select>
+    <button class="btn-confirm" id="tzConfirm">Confirm &amp; Open Schedule</button>
+  </div>
+</div>
+
+<div class="modal-overlay hide" id="aiPopup">
+  <div class="modal ai-popup-modal">
+    <div class="ai-popup-head">
+      <div class="ai-avatar">🧠</div>
+      <div>
+        <div class="eyebrow-m mono">NEXUS AI · TODAY'S BRIEFING</div>
+        <h2 id="aiPopupTitle">Commander, listen up.</h2>
+      </div>
+    </div>
+    <ul class="ai-popup-points" id="aiPopupPoints"></ul>
+    <button class="btn-confirm" id="aiPopupClose">Got it, Commander</button>
+  </div>
+</div>
+
+<div class="tz-fab" id="tzFab" title="Change timezone">🌐</div>
+<div class="reminder-fab" id="reminderFab" title="Toggle 1-hour reminders">🔔</div>
+<div class="export-fab" id="exportFab" title="Export to Calendar (.ics)">📆</div>
+<div class="toast" id="toast"></div>
+
+<div class="hero">
+  <div class="scan-line"></div>
+  <div class="header">
+    <div class="eyebrow mono"><span class="live-dot"></span> ALLIANCE OPS — LIVE</div>
+    <div class="hazard-strip"></div>
+    <h1>NEXUS <span class="grad">PHOENIX</span></h1>
+    <p class="sub">Auto-converts to your timezone · 4-week rotation · live countdown begins 12 hours before each event.</p>
+
+    <div class="hero-stats">
+      <div class="hero-stat accent-local">
+        <div class="hs-label">YOUR LOCAL TIME</div>
+        <div class="hs-value mono" id="localClock">--:--:--</div>
+        <div class="hs-sub" id="localClockDay">—</div>
+      </div>
+      <div class="hero-stat accent-server">
+        <div class="hs-label">GAME SERVER TIME (SVT)</div>
+        <div class="hs-value mono" id="serverClock">--:--:--</div>
+        <div class="hs-sub" id="serverClockDay">—</div>
+      </div>
+      <div class="hero-stat accent-cycle">
+        <div class="hs-label">CYCLE POSITION</div>
+        <div class="hs-value mono" id="heroCyclePos">—</div>
+        <div class="hs-sub" id="heroCycleSub">Reminders: <span id="reminderStatus">off</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ai-officer" id="aiOfficer">
+  <div class="ai-head">
+    <div class="ai-avatar">🧠</div>
+    <div class="ai-headtext">
+      <div class="ai-name mono">NEXUS AI <span class="ai-badge" id="aiStatus">ONLINE</span></div>
+      <div class="ai-sub" id="aiStatusLine">Analyzing schedule...</div>
+    </div>
+  </div>
+  <div class="ai-briefing" id="aiBriefing"></div>
+
+  <div class="ai-chain" id="aiChain"></div>
+
+  <div class="ai-section" id="aiObjectivesSection">
+    <div class="ai-section-title mono">OBJECTIVES</div>
+    <ul class="ai-strategy" id="aiStrategy"></ul>
+  </div>
+
+  <div class="ai-quote mono" id="aiQuote"></div>
+
+  <div class="ai-ask">
+    <input type="text" id="aiAskInput" class="ai-ask-input" placeholder="Ask NEXUS AI… e.g. 'kapan capital?'" autocomplete="off">
+    <button id="aiAskBtn" class="ai-ask-btn">Ask</button>
+  </div>
+  <div class="ai-answer" id="aiAnswer"></div>
+</div>
+
+<div class="cycle">
+  <div class="cycle-label mono">ROTATION CYCLE — 4 WEEKS</div>
+  <!-- already English -->
+  <div class="cycle-track" id="cycleTrack"></div>
+</div>
+
+<div class="tz-banner" id="tzBanner"></div>
+
+<div class="today-banner" id="todayBanner"></div>
+
+<div class="legend" id="legend"></div>
+
+<div class="calendar" id="calendar"></div>
+
+<div class="notes" id="notesPanel">
+  <div class="notes-head" id="notesToggle">
+    <h2>IMPORTANT NOTES</h2>
+    <span class="arrow">▾</span>
+  </div>
+  <div class="notes-body">
+    <div class="note-item"><div class="n-dot" style="background:var(--c-resource)"></div><div><b>Server Time.</b> All source times are Server Time (SVT = UTC+8). The number in parentheses is hours before (–) / after (+) the daily reset.</div></div>
+    <div class="note-item"><div class="n-dot" style="background:var(--c-droid)"></div><div><b>Alliance Droid.</b> Rotates between two slots (+1 and +10 from reset) to cover more timezones.</div></div>
+    <div class="note-item"><div class="n-dot" style="background:var(--c-resource)"></div><div><b>Resource Fields.</b> Rotates between reset (0) and +12, so more members get a turn.</div></div>
+    <div class="note-item"><div class="n-dot" style="background:var(--c-supply)"></div><div><b>Resource Types.</b> Rotates per time slot — the same resource appears 2 days in a row, but on different schedules.</div></div>
+    <div class="note-item"><div class="n-dot" style="background:var(--c-capital)"></div><div><b>Timezone &amp; Countdown.</b> Local time &amp; countdown are computed automatically from today's position in the 4-week cycle — still cross-check the Alliance Declaration for the official current week.</div></div>
+  </div>
+</div>
+
+<p class="ref-note" id="refNote"></p>
+
+<div class="credit" id="credit">0x•B🕷️Y</div>
+
+<script>
+const TYPES = {
+  oil:      {label:'Oil Field', hex:'#ff9b3d', icon:'🛢️'},
+  farm:     {label:'Farm Field', hex:'#7ed957', icon:'🌾'},
+  droid:    {label:'Alliance Droid', hex:'#ffb32e', icon:'🎯'},
+  silo:     {label:'Silo Scramble', hex:'#9b6bff', icon:'🛖'},
+  supply:   {label:'Supply Contest', hex:'#2fe6a0', icon:'📦'},
+  capital:  {label:'Capital Contest', hex:'#ff2f6d', icon:'🏛️'},
+};
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+/* =====================================================================
+   RAW SCHEDULE — schedule.js equivalent.
+   Server-time (SVT / UTC+8) ONLY. No timezone math allowed in this block.
+   week: 1-4, day: 0=Monday..6=Sunday, time: "HH:MM" in SVT.
+   ===================================================================== */
+const SCHEDULE = [
+  {week:4, day:0, time:"00:00", delta:0, type:"oil"},
+  {week:4, day:1, time:"01:00", delta:1, type:"droid"},
+  {week:4, day:1, time:"21:00", delta:-3, type:"silo"},
+  {week:4, day:1, time:"12:00", delta:12, type:"farm"},
+  {week:4, day:2, time:"09:00", delta:9, type:"supply"},
+  {week:4, day:2, time:"00:00", delta:0, type:"oil"},
+  {week:4, day:3, time:"10:00", delta:10, type:"droid"},
+  {week:4, day:3, time:"12:00", delta:12, type:"farm"},
+  {week:4, day:4, time:"09:00", delta:9, type:"supply"},
+  {week:4, day:4, time:"00:00", delta:0, type:"oil"},
+  {week:4, day:5, time:"10:00", delta:10, type:"capital"},
+  {week:4, day:5, time:"01:00", delta:1, type:"droid"},
+  {week:4, day:5, time:"12:00", delta:12, type:"farm"},
+  {week:4, day:6, time:"09:00", delta:9, type:"supply"},
+  {week:4, day:6, time:"00:00", delta:0, type:"oil"},
+  {week:1, day:0, time:"10:00", delta:10, type:"droid"},
+  {week:1, day:0, time:"12:00", delta:12, type:"farm"},
+  {week:1, day:1, time:"09:00", delta:9, type:"supply"},
+  {week:1, day:1, time:"21:00", delta:-3, type:"silo"},
+  {week:1, day:1, time:"00:00", delta:0, type:"oil"},
+  {week:1, day:2, time:"01:00", delta:1, type:"droid"},
+  {week:1, day:2, time:"12:00", delta:12, type:"farm"},
+  {week:1, day:3, time:"09:00", delta:9, type:"supply"},
+  {week:1, day:3, time:"00:00", delta:0, type:"oil"},
+  {week:1, day:4, time:"10:00", delta:10, type:"droid"},
+  {week:1, day:4, time:"12:00", delta:12, type:"farm"},
+  {week:1, day:5, time:"10:00", delta:10, type:"capital"},
+  {week:1, day:5, time:"09:00", delta:9, type:"supply"},
+  {week:1, day:5, time:"00:00", delta:0, type:"oil"},
+  {week:1, day:6, time:"01:00", delta:1, type:"droid"},
+  {week:1, day:6, time:"12:00", delta:12, type:"farm"},
+  {week:2, day:0, time:"09:00", delta:9, type:"supply"},
+  {week:2, day:0, time:"00:00", delta:0, type:"oil"},
+  {week:2, day:1, time:"10:00", delta:10, type:"droid"},
+  {week:2, day:1, time:"21:00", delta:-3, type:"silo"},
+  {week:2, day:1, time:"12:00", delta:12, type:"farm"},
+  {week:2, day:2, time:"09:00", delta:9, type:"supply"},
+  {week:2, day:2, time:"00:00", delta:0, type:"oil"},
+  {week:2, day:3, time:"01:00", delta:1, type:"droid"},
+  {week:2, day:3, time:"12:00", delta:12, type:"farm"},
+  {week:2, day:4, time:"09:00", delta:9, type:"supply"},
+  {week:2, day:4, time:"00:00", delta:0, type:"oil"},
+  {week:2, day:5, time:"10:00", delta:10, type:"capital"},
+  {week:2, day:5, time:"10:00", delta:10, type:"droid"},
+  {week:2, day:5, time:"12:00", delta:12, type:"farm"},
+  {week:2, day:6, time:"09:00", delta:9, type:"supply"},
+  {week:2, day:6, time:"00:00", delta:0, type:"oil"},
+  {week:3, day:0, time:"01:00", delta:1, type:"droid"},
+  {week:3, day:0, time:"12:00", delta:12, type:"farm"},
+  {week:3, day:1, time:"09:00", delta:9, type:"supply"},
+  {week:3, day:1, time:"21:00", delta:-3, type:"silo"},
+  {week:3, day:1, time:"00:00", delta:0, type:"oil"},
+  {week:3, day:2, time:"10:00", delta:10, type:"droid"},
+  {week:3, day:2, time:"12:00", delta:12, type:"farm"},
+  {week:3, day:3, time:"09:00", delta:9, type:"supply"},
+  {week:3, day:3, time:"00:00", delta:0, type:"oil"},
+  {week:3, day:4, time:"01:00", delta:1, type:"droid"},
+  {week:3, day:4, time:"12:00", delta:12, type:"farm"},
+  {week:3, day:5, time:"10:00", delta:10, type:"capital"},
+  {week:3, day:5, time:"09:00", delta:9, type:"supply"},
+  {week:3, day:5, time:"00:00", delta:0, type:"oil"},
+  {week:3, day:6, time:"10:00", delta:10, type:"droid"},
+  {week:3, day:6, time:"12:00", delta:12, type:"farm"},
+];
+
+/* =====================================================================
+   SCHEDULING ENGINE — converts SCHEDULE into the single source of truth
+   (convertedSchedule) that every feature (calendar, timeline, countdown,
+   next-event, today-highlight, filters) reads from. Nothing downstream of
+   buildConvertedSchedule() is allowed to do its own day/time math.
+   ===================================================================== */
+const SERVER_UTC_OFFSET = 8;      // SVT = UTC+8
+const CYCLE_HOURS = 672;          // 28 days
+const WEEK_HOURS  = 168;          // 7 days
+const CYCLE_MS = CYCLE_HOURS * 3600000;
+
+// --- ANCHOR CALIBRATION ---
+// Real-world instant used to map the 28-day in-game cycle onto actual UTC
+// timestamps (needed for live countdowns). Calibrated from THREE direct
+// user-confirmed local-time checkpoints (viewer @ UTC+7), all verified to
+// land within ~0.01h of each other using this single anchor:
+//   - Alliance Droid:  today,    local 00:00  (SVT Sunday 01:00)  -> Week 2, Sunday
+//   - Resource Fields: today,    local 23:00  (SVT Monday 00:00)  -> Week 3, Monday
+//   - Supply Contest:  tomorrow, local 08:00  (SVT Monday 09:00)  -> Week 3, Monday
+// The table's clock values are used AS-IS as server time (SVT/UTC+8) — no
+// extra shift needed, since the table was already server-time-native.
+const CALIBRATION_UTC = Date.UTC(2026,6,4,17,0,0); // = Sun 2026-07-05 00:00 local(+7) = 01:00 SVT
+const CALIBRATION_WEEK = 1;
+const CALIBRATION_DAY  = 6; // Sunday (Monday=0)
+const CALIBRATION_SVT_MS = 1 * 3600 * 1000; // 01:00:00 SVT
+const calibrationAbsHours = ((CALIBRATION_WEEK-1)*7 + CALIBRATION_DAY)*24 + CALIBRATION_SVT_MS/3600000;
+const ANCHOR_CYCLE_START_UTC = CALIBRATION_UTC - calibrationAbsHours*3600000;
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+// Absolute position (in hours) of a server-time (week,day,time) inside the
+// 28-day cycle. Range: [0, 672).
+function svtAbsoluteHours(week, day, timeStr){
+  const [h,m] = timeStr.split(':').map(Number);
+  return ((week-1)*7 + day)*24 + h + m/60;
+}
+
+// The real-world UTC timestamp (ms) of ONE instance of this server-time
+// event — always derived from the SERVER (raw) week/day/time, never from
+// the viewer-local converted fields. This is what countdowns must use.
+function occurrenceUTC(week, day, timeStr){
+  return ANCHOR_CYCLE_START_UTC + svtAbsoluteHours(week, day, timeStr)*3600000;
+}
+function nextOccurrenceFrom(baseUTC, now){
+  let k = Math.ceil((now - baseUTC) / CYCLE_MS);
+  let occ = baseUTC + k*CYCLE_MS;
+  if(occ < now) occ += CYCLE_MS;
+  return occ;
+}
+
+// Core conversion: shift an absolute-cycle-hours value (SVT) into the
+// viewer's timezone, wrapping correctly across day/week/cycle boundaries.
+// This single modulo handles midnight-crossing, week-boundary-crossing,
+// and Week4->Week1 wraparound all at once — no special-case branches.
+function shiftIntoViewer(absHoursSVT, viewerOffsetHours){
+  const diff = viewerOffsetHours - SERVER_UTC_OFFSET; // may be fractional (e.g. UTC+5:30)
+  return ((absHoursSVT + diff) % CYCLE_HOURS + CYCLE_HOURS) % CYCLE_HOURS;
+}
+
+// Derive {week, day, hour, minute} from a wrapped absolute-hours value,
+// with explicit carry handling for minute/hour/day/week rounding overflow
+// (e.g. 23:59.6 rounding up to 24:00 must carry into the next day/week).
+function deriveWeekDayTime(absHoursLocal){
+  let week = Math.floor(absHoursLocal / WEEK_HOURS) + 1;
+  let rem  = absHoursLocal - (week-1)*WEEK_HOURS;
+  let day  = Math.floor(rem / 24);
+  let hourFrac = rem - day*24;
+  let hour = Math.floor(hourFrac);
+  let minute = Math.round((hourFrac - hour) * 60);
+
+  if(minute === 60){ minute = 0; hour += 1; }
+  if(hour === 24){ hour = 0; day += 1; }
+  if(day === 7){ day = 0; week += 1; }
+  if(week > 4){ week = 1; }
+
+  return { week, day, time: `${pad2(hour)}:${pad2(minute)}` };
+}
+
+// THE single source of truth. Rebuilt on every render (dataset is tiny —
+// eager rebuild trades a few dozen cheap operations for total immunity to
+// cache-invalidation bugs).
+function buildConvertedSchedule(viewerOffsetHours){
+  const now = Date.now();
+  const off = (viewerOffsetHours===null || viewerOffsetHours===undefined) ? SERVER_UTC_OFFSET : viewerOffsetHours;
+
+  return SCHEDULE.map(raw=>{
+    const absSVT = svtAbsoluteHours(raw.week, raw.day, raw.time);
+    const absLocal = shiftIntoViewer(absSVT, off);
+    const local = deriveWeekDayTime(absLocal);
+
+    const baseOcc = occurrenceUTC(raw.week, raw.day, raw.time);
+    const nextOccurrenceUTC = nextOccurrenceFrom(baseOcc, now);
+
+    return {
+      type: raw.type,
+      delta: raw.delta,
+      week: local.week,
+      day: local.day,
+      dayName: DAYS[local.day],
+      time: local.time,
+      srcWeek: raw.week,
+      srcDay: DAYS[raw.day],
+      srcTime: raw.time,
+      nextOccurrenceUTC,
+      notified1h: false,
+    };
+  }).sort((a,b)=> a.nextOccurrenceUTC - b.nextOccurrenceUTC || a.time.localeCompare(b.time));
+}
+
+// Grouping helper — the ONLY place that turns the flat convertedSchedule
+// into a {week: {day: [...]}} shape for rendering. Calendar uses this;
+// Next Event / Countdown use the flat array directly.
+function groupByWeekDay(convertedSchedule){
+  const grouped = {1:{},2:{},3:{},4:{}};
+  [1,2,3,4].forEach(w=> DAYS.forEach(d=> grouped[w][d]=[]));
+  convertedSchedule.forEach(e=>{
+    grouped[e.week][e.dayName].push(e);
+  });
+  Object.values(grouped).forEach(week=>{
+    Object.values(week).forEach(list=> list.sort((a,b)=> a.time.localeCompare(b.time)));
+  });
+  return grouped;
+}
+
+// "Today" is computed by running the CURRENT real-world instant through the
+// exact same absolute-hours pipeline used for events — not a separate
+// ad-hoc calculation. This guarantees today-highlight can never drift out
+// of sync with how events are bucketed.
+function getTodayPosition(viewerOffsetHours){
+  const off = (viewerOffsetHours===null || viewerOffsetHours===undefined) ? SERVER_UTC_OFFSET : viewerOffsetHours;
+  const nowAbsSVT = (Date.now() - ANCHOR_CYCLE_START_UTC) / 3600000;
+  const wrappedSVT = ((nowAbsSVT % CYCLE_HOURS) + CYCLE_HOURS) % CYCLE_HOURS;
+  const absLocal = shiftIntoViewer(wrappedSVT, off);
+  return deriveWeekDayTime(absLocal);
+}
+
+// Soonest upcoming event across the whole schedule (any week/day) — reused
+// by both the "Next Event" indicator and the today-banner.
+function getNextEvent(convertedSchedule){
+  return convertedSchedule.reduce((soonest, e)=>
+    (!soonest || e.nextOccurrenceUTC < soonest.nextOccurrenceUTC) ? e : soonest, null);
+}
+
+/* ---------------- APP STATE ---------------- */
+let viewerOffsetHours = null;
+let activeWeek = 1;
+let activeFilter = null;
+let countdownRegistry = [];
+let hasAutoScrolled = false;
+let CURRENT_WEEK = 1;
+let CURRENT_DAY = DAYS[0];
+let convertedSchedule = [];
+let scheduleByWeekDay = {};
+
+function refreshCurrentPosition(){
+  const pos = getTodayPosition(viewerOffsetHours);
+  CURRENT_WEEK = pos.week;
+  CURRENT_DAY = DAYS[pos.day];
+}
+
+function refreshConvertedSchedule(){
+  convertedSchedule = buildConvertedSchedule(viewerOffsetHours);
+  scheduleByWeekDay = groupByWeekDay(convertedSchedule);
+}
+
+/* ---------------- TIMEZONE MODAL ---------------- */
+const TZ_LIST = [
+  [-12,'UTC-12 — Baker Island'],[-11,'UTC-11 — Samoa'],[-10,'UTC-10 — Hawaii'],
+  [-9,'UTC-9 — Alaska'],[-8,'UTC-8 — Los Angeles, Vancouver'],[-7,'UTC-7 — Denver, Calgary'],
+  [-6,'UTC-6 — Chicago, Mexico City'],[-5,'UTC-5 — New York, Toronto'],[-4,'UTC-4 — Santiago, Caracas'],
+  [-3,'UTC-3 — São Paulo, Buenos Aires'],[-2,'UTC-2 — Mid-Atlantic'],[-1,'UTC-1 — Azores'],
+  [0,'UTC+0 — London, Lisbon'],[1,'UTC+1 — Paris, Berlin, Lagos'],[2,'UTC+2 — Cairo, Johannesburg'],
+  [3,'UTC+3 — Moscow, Riyadh, Nairobi'],[3.5,'UTC+3:30 — Tehran'],[4,'UTC+4 — Dubai, Baku'],
+  [4.5,'UTC+4:30 — Kabul'],[5,'UTC+5 — Karachi, Tashkent'],[5.5,'UTC+5:30 — India, Sri Lanka'],
+  [5.75,'UTC+5:45 — Nepal'],[6,'UTC+6 — Dhaka, Almaty'],[6.5,'UTC+6:30 — Yangon'],
+  [7,'UTC+7 — Jakarta, Bangkok, Hanoi'],[8,'UTC+8 — Singapore, Beijing, Manila'],
+  [9,'UTC+9 — Tokyo, Seoul'],[9.5,'UTC+9:30 — Adelaide'],[10,'UTC+10 — Sydney, Guam'],
+  [11,'UTC+11 — Solomon Islands'],[12,'UTC+12 — Auckland, Fiji'],[13,'UTC+13 — Tonga'],
+  [14,'UTC+14 — Kiribati'],
+];
+function detectedOffset(){ return -new Date().getTimezoneOffset()/60; }
+function offsetLabel(o){ const s=o>=0?'+':''; return `UTC${s}${o}`; }
+
+/* ---------------- LIVE CLOCKS ---------------- */
+const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function clockParts(offsetHours){
+  const d = new Date(Date.now() + offsetHours*3600000);
+  const hh = String(d.getUTCHours()).padStart(2,'0');
+  const mm = String(d.getUTCMinutes()).padStart(2,'0');
+  const ss = String(d.getUTCSeconds()).padStart(2,'0');
+  return { time:`${hh}:${mm}:${ss}`, day: WEEKDAY_NAMES[d.getUTCDay()] };
+}
+function updateLiveClocks(){
+  const localOff = (viewerOffsetHours===null||viewerOffsetHours===undefined) ? SERVER_UTC_OFFSET : viewerOffsetHours;
+  const loc = clockParts(localOff);
+  const srv = clockParts(SERVER_UTC_OFFSET);
+  const lc = document.getElementById('localClock');
+  const lcd = document.getElementById('localClockDay');
+  const sc = document.getElementById('serverClock');
+  const scd = document.getElementById('serverClockDay');
+  if(lc){ lc.textContent = loc.time; lcd.textContent = `${loc.day} · ${offsetLabel(localOff)}`; }
+  if(sc){ sc.textContent = srv.time; scd.textContent = `${srv.day} · SVT`; }
+
+  const hp = document.getElementById('heroCyclePos');
+  if(hp){
+    const weekType = (CURRENT_WEEK % 2 === 0) ? 'SVS' : 'Titan Canyons';
+    hp.textContent = `Week ${CURRENT_WEEK} - ${weekType} - ${CURRENT_DAY}`;
+  }
+
+  const tlc = document.getElementById('todayLiveClock');
+  if(tlc) tlc.textContent = loc.time;
+}
+
+/* ---------------- REMINDER NOTIFICATIONS (works on ANY browser) ---------------- */
+let remindersEnabled = (localStorage.getItem('nexus_reminders') === '1');
+const supportsNotification = ('Notification' in window);
+const originalTitle = document.title;
+let titleFlashTimer = null;
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=> t.classList.remove('show'), 3200);
+}
+function setReminderUI(){
+  const fab = document.getElementById('reminderFab');
+  const status = document.getElementById('reminderStatus');
+  fab.classList.toggle('on', remindersEnabled);
+  if(status) status.textContent = remindersEnabled ? 'on' : 'off';
+}
+function toggleReminders(){
+  if(!remindersEnabled){
+    remindersEnabled = true;
+    localStorage.setItem('nexus_reminders','1');
+    if(supportsNotification && Notification.permission==='default'){
+      Notification.requestPermission().then(()=>{
+        showToast(Notification.permission==='granted'
+          ? "🔔 Reminders on — you'll get a notification 1 hour before each event."
+          : "🔔 Reminders on — this browser blocked OS notifications, so you'll still get an on-screen alert + sound instead.");
+      });
+    } else if(supportsNotification && Notification.permission==='granted'){
+      showToast("🔔 Reminders on — you'll get a notification 1 hour before each event.");
+    } else {
+      showToast("🔔 Reminders on — this browser/device doesn't support desktop notifications, so you'll get an on-screen alert + sound instead (keep the tab open).");
+    }
+  } else {
+    remindersEnabled = false;
+    localStorage.setItem('nexus_reminders','0');
+    showToast('🔕 Reminders turned off.');
+  }
+  setReminderUI();
+}
+document.getElementById('reminderFab').onclick = toggleReminders;
+setReminderUI();
+
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [880, 660].forEach((freq, i)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + i*0.22);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + i*0.22 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.22 + 0.2);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + i*0.22);
+      osc.stop(ctx.currentTime + i*0.22 + 0.22);
+    });
+  }catch(e){ /* audio not available, ignore */ }
+}
+function flashTitle(msg){
+  let on = false;
+  clearInterval(titleFlashTimer);
+  titleFlashTimer = setInterval(()=>{
+    document.title = on ? originalTitle : msg;
+    on = !on;
+  }, 1000);
+  setTimeout(()=>{ clearInterval(titleFlashTimer); document.title = originalTitle; }, 15000);
+}
+function showInPageAlert(title, body){
+  let el = document.getElementById('reminderAlert');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'reminderAlert';
+    el.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(5,7,12,.88);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `
+    <div style="max-width:380px;width:100%;background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;padding:26px 22px;text-align:center;box-shadow:0 20px 60px -10px rgba(0,0,0,.7);">
+      <div style="font-size:34px;margin-bottom:10px;">⏳</div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px;">${title}</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;">${body}</div>
+      <button id="reminderAlertClose" style="background:var(--c-supply);color:#04140c;border:none;border-radius:10px;padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer;">Got it</button>
+    </div>`;
+  el.style.display = 'flex';
+  document.getElementById('reminderAlertClose').onclick = ()=>{ el.style.display = 'none'; };
+}
+function maybeNotify(item){
+  if(!remindersEnabled) return;
+  const remain = item.nextOccurrenceUTC - Date.now();
+  if(remain <= 3600000 && remain > 0 && !item.notified1h){
+    item.notified1h = true;
+    const label = TYPES[item.type] ? TYPES[item.type].label : 'Event';
+    const body = `${item.time} local · starts in about 1 hour`;
+    if(supportsNotification && Notification.permission==='granted'){
+      new Notification('⏳ 1 hour to go — '+label, {
+        body,
+        tag: 'nexus-'+item.srcWeek+'-'+item.srcDay+'-'+item.srcTime
+      });
+    }
+    showInPageAlert('1 hour to go — '+label, body);
+    flashTitle('⏰ '+label+' soon!');
+    playBeep();
+  }
+}
+
+function setupModal(){
+  const det = detectedOffset();
+  let closest = TZ_LIST[0][0], minDiff = Infinity;
+  TZ_LIST.forEach(([o])=>{ const diff = Math.abs(o-det); if(diff<minDiff){minDiff=diff; closest=o;} });
+  document.getElementById('detectValue').textContent = offsetLabel(det) + (Math.abs(det-closest)<0.01 ? '' : ' (≈ '+offsetLabel(closest)+')');
+  const select = document.getElementById('tzSelect');
+  select.innerHTML = TZ_LIST.map(([o,l])=> `<option value="${o}" ${o===closest?'selected':''}>${l}</option>`).join('');
+  document.getElementById('detectCard').onclick = ()=> confirmTz(det);
+  document.getElementById('tzConfirm').onclick = ()=> confirmTz(parseFloat(select.value));
+}
+function confirmTz(offset){
+  viewerOffsetHours = offset;
+  document.getElementById('tzModal').classList.add('hide');
+  render();
+  startCountdownLoop();
+  maybeShowAIPopup();
+}
+document.getElementById('tzFab').onclick = ()=>{
+  document.getElementById('tzModal').classList.remove('hide');
+};
+
+function timeToPct(t){
+  const [h,m] = t.split(':').map(Number);
+  return ((h*60+m)/1440)*100;
+}
+
+function deltaText(d){
+  if(d===0) return {txt:'RESET', arrow:'◆'};
+  if(d>0) return {txt:'+'+d, arrow:'▲'};
+  return {txt:d, arrow:'▼'};
+}
+
+/* ---------------- COUNTDOWN ---------------- */
+function fmtCountdown(ms){
+  const totalSec = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(totalSec/3600);
+  const m = Math.floor((totalSec%3600)/60);
+  const s = totalSec%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function updateCountdowns(){
+  const now = Date.now();
+  countdownRegistry.forEach(item=>{
+    const remain = item.event.nextOccurrenceUTC - now;
+    if(remain <= 12*3600000){
+      item.el.classList.add('show');
+      item.row.classList.add('soon');
+      item.el.textContent = '⏳ ' + fmtCountdown(remain);
+      maybeNotify(item.event);
+      if(remain<=0){
+        item.event.nextOccurrenceUTC = nextOccurrenceFrom(item.event.nextOccurrenceUTC, now);
+        item.event.notified1h = false;
+      }
+    } else {
+      item.el.classList.remove('show');
+      item.row.classList.remove('soon');
+    }
+  });
+  updateLiveClocks();
+  renderAIOfficer();
+}
+let countdownInterval = null;
+function startCountdownLoop(){
+  if(countdownInterval) clearInterval(countdownInterval);
+  updateCountdowns();
+  countdownInterval = setInterval(updateCountdowns, 1000);
+}
+
+/* ---------------- RENDER ---------------- */
+function buildCycleTabs(){
+  const track = document.getElementById('cycleTrack');
+  track.innerHTML = '';
+  [1,2,3,4].forEach(w=>{
+    const tab = document.createElement('div');
+    tab.className = 'cycle-tab' + (w===activeWeek?' active':'') + (w===CURRENT_WEEK?' has-today':'');
+    tab.innerHTML = `<div class="wk">WEEK ${w}</div><div class="today-dot"></div>`;
+    tab.onclick = ()=>{ activeWeek = w; render(); };
+    track.appendChild(tab);
+  });
+}
+
+function buildLegend(){
+  const legend = document.getElementById('legend');
+  legend.innerHTML = '';
+  Object.entries(TYPES).forEach(([key,t])=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (activeFilter===key?' active':'') + (activeFilter && activeFilter!==key?' dimmed':'');
+    chip.style.setProperty('--dot-color', t.hex);
+    chip.innerHTML = `<span class="dot" style="background:${t.hex}"></span>${t.icon} ${t.label}`;
+    chip.onclick = ()=>{ activeFilter = (activeFilter===key)? null : key; render(); };
+    legend.appendChild(chip);
+  });
+}
+
+function buildTzBanner(){
+  const el = document.getElementById('tzBanner');
+  el.innerHTML = `🌐 Showing times in <b>${offsetLabel(viewerOffsetHours)}</b> · Server Time = <b>UTC+8</b> <button id="tzChangeBtn">CHANGE</button>`;
+  document.getElementById('tzChangeBtn').onclick = ()=> document.getElementById('tzModal').classList.remove('hide');
+}
+
+function buildCalendar(){
+  const cal = document.getElementById('calendar');
+  cal.innerHTML = '';
+  countdownRegistry = [];
+  const weekData = scheduleByWeekDay[activeWeek];
+
+  DAYS.forEach((day)=>{
+    const events = weekData[day];
+    const isToday = activeWeek===CURRENT_WEEK && day===CURRENT_DAY;
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (isToday?' is-today':'');
+
+    const head = document.createElement('div');
+    head.className = 'day-head';
+    head.innerHTML = `<div class="day-name">${day} ${isToday?'<span class="today-tag">TODAY</span><span class="today-live-clock" id="todayLiveClock">--:--:--</span>':''}</div>
+                       <div class="day-count mono">${events.length} EVENT${events.length>1?'S':''}</div>`;
+    card.appendChild(head);
+
+    const tl = document.createElement('div');
+    tl.className = 'timeline';
+    [0,6,12,18,24].forEach(h=>{
+      const pct = (h/24)*100;
+      const tick = document.createElement('div');
+      tick.className='tick'; tick.style.left=pct+'%';
+      tl.appendChild(tick);
+      const lbl = document.createElement('div');
+      lbl.className='ticklabel'; lbl.style.left=pct+'%';
+      lbl.textContent = String(h).padStart(2,'0');
+      tl.appendChild(lbl);
+    });
+    events.forEach(e=>{
+      const dot = document.createElement('div');
+      const dim = activeFilter && activeFilter!==e.type;
+      const dotColor = isToday ? TYPES[e.type].hex : 'var(--neutral)';
+      dot.className = 'evt-dot'+(dim?' dimmed':'');
+      dot.style.left = timeToPct(e.time)+'%';
+      dot.style.background = dotColor;
+      dot.style.color = dotColor;
+      dot.title = `${e.time} · ${TYPES[e.type].label}`;
+      tl.appendChild(dot);
+    });
+    card.appendChild(tl);
+
+    const list = document.createElement('div');
+    list.className = 'events';
+    events.forEach(e=>{
+      const d = deltaText(e.delta);
+      const dim = activeFilter && activeFilter!==e.type;
+      const rowColor = isToday ? TYPES[e.type].hex : 'var(--text)';
+      const row = document.createElement('div');
+      row.className = 'evt-row'+(dim?' dimmed':'')+(isToday?' vivid':'');
+      row.innerHTML = `
+        <div class="evt-swatch" style="background:${isToday ? TYPES[e.type].hex : 'var(--neutral)'}"></div>
+        <div class="evt-time-wrap">
+          <div class="evt-time-local">${e.time}</div>
+        </div>
+        <div class="evt-delta">${d.arrow} ${d.txt}</div>
+        <div class="evt-label" style="color:${rowColor}">${TYPES[e.type].icon} ${TYPES[e.type].label}</div>
+        <div class="evt-countdown"></div>`;
+      list.appendChild(row);
+
+      const cdEl = row.querySelector('.evt-countdown');
+      countdownRegistry.push({el:cdEl, row, event:e});
+    });
+    card.appendChild(list);
+
+    cal.appendChild(card);
+  });
+
+  const banner = document.getElementById('todayBanner');
+  const next = getNextEvent(convertedSchedule);
+  if(activeWeek===CURRENT_WEEK){
+    banner.classList.add('show');
+    const nextTxt = next ? ` · Next up: <b>${TYPES[next.type].label}</b> in ${fmtCountdown(next.nextOccurrenceUTC-Date.now())}` : '';
+    banner.innerHTML = `📍 <span><b>Week ${CURRENT_WEEK} · ${CURRENT_DAY}</b> detected as today${nextTxt}</span>`;
+  } else {
+    banner.classList.remove('show');
+  }
+
+  document.getElementById('refNote').textContent = `CURRENT CYCLE POSITION — WEEK ${CURRENT_WEEK} · ${CURRENT_DAY.toUpperCase()}`;
+
+  updateCountdowns();
+}
+
+/* =====================================================================
+   NEXUS AI — EVENT OFFICER
+   Reuses convertedSchedule as its only data source (same single-source-
+   of-truth rule as the calendar/countdown/timeline). No independent time
+   math — everything here reads nextOccurrenceUTC / week / day / time that
+   was already computed by the scheduling engine.
+   ===================================================================== */
+const PRIORITY = { capital:'Critical', droid:'High', supply:'Medium', silo:'Medium', oil:'Low', farm:'Low' };
+const PRIORITY_RANK = { Critical:4, High:3, Medium:2, Low:1 };
+const FOCUS_ORDER = ['capital','droid','supply','silo','oil','farm']; // tie-break order when multiple types are urgent at once
+
+// How long an event is considered "in progress" after it starts.
+const EVENT_DURATION_MS = {
+  droid: 3600000,        // 1 hour
+  oil: 4*3600000,        // Resource Fields expire after 4 hours
+  farm: 4*3600000,
+  silo: 3600000,         // 1 hour
+  supply: 3600000,       // 1 hour
+  capital: 2*3600000,    // 2 hours
+};
+const ALERT_WINDOW_MS = 3600000;     // "less than one hour" -> Battle Alert
+const PREP_WINDOW_MS  = 12*3600000;  // within 12h -> Preparation Phase
+const COMPLETE_GRACE_MS = 15*60000;  // how long "Battle Complete" stays shown after an event's duration ends
+
+// Per-event-type content library. Only what's specified is included —
+// unspecified types (Supply/Capital) get shorter generic phase text and no
+// objectives/heroes block, keeping the card clean per the design rules.
+const AI_CONTENT = {
+  droid: {
+    icon:'🎯', label:'Alliance Droid',
+    phases:{
+      prep:['Today\'s priority is Alliance Droid.', 'Prepare your strongest march.'],
+      alert:['Alliance Droid begins in less than one hour.'],
+      inProgress:['Focus on reaching 1.5AA+ Damage.'],
+      complete:['Great work, Commander.', 'Don\'t forget to Flip Pool after cooldown.'],
+      recovery:['Prepare for the next scheduled event.'],
+    },
+    objectivesTitle:'DROID MISSION · LANCER Lv.13',
+    objectives:['Deal 1.5AA+ Damage.','Donate Before Battle.','Deploy Your Strongest March.','Flip Pool After Cooldown.'],
+  },
+  oil: {
+    icon:'🛢️', label:'Oil Field',
+    phases:{
+      prep:['Oil Field will refresh soon.', 'Prepare your gathering heroes.'],
+      alert:['Oil Field is now available.'],
+      inProgress:['Gather as much oil as possible before expiration.'],
+      complete:['Oil Field has expired.'],
+      recovery:['Prepare for the next event.'],
+    },
+    objectivesTitle:'OIL FIELD',
+    objectives:['Deploy Gathering Heroes.','Activate Gather Skill.','Activate Resource Skill.','Gather All Marches Within 4 Hours.'],
+    heroes:['Ishi Tarou','Black Widow','Kate Curry','Delhuyar'],
+    reminder:'Oil Field disappears after 4 hours. Make sure every march finishes gathering before it expires.',
+  },
+  farm: {
+    icon:'🌾', label:'Farm Field',
+    phases:{
+      prep:['Farm Field will refresh soon.', 'Prepare your gathering heroes.'],
+      alert:['Farm Field is now available.'],
+      inProgress:['Gather as much food as possible before expiration.'],
+      complete:['Farm Field has expired.'],
+      recovery:['Prepare for the next event.'],
+    },
+    objectivesTitle:'FARM FIELD',
+    objectives:['Deploy Gathering Heroes.','Activate Gather Skill.','Activate Resource Skill.','Gather All Marches Within 4 Hours.'],
+    heroes:['Ishi Tarou','Black Widow','Kate Curry','Delhuyar'],
+    reminder:'Farm Field disappears after 4 hours. Make sure every march finishes gathering before it expires.',
+  },
+  silo: {
+    icon:'🛖', label:'Silo Scramble',
+    phases:{
+      prep:['Silo Battle begins soon.', 'Prepare your strongest march.'],
+      alert:['Silo Battle is about to begin.'],
+      inProgress:['Support your alliance and maximize your score.'],
+      complete:['Excellent work.', 'Prepare for the next operation.'],
+      recovery:['Recover troops and prepare for the next event.'],
+    },
+    objectivesTitle:'SILO MISSION',
+    objectives:['Reinforce South & West Silos Immediately.','Clear Dark Legions Around the Capital.','Deploy Temporary Traps.','Maximize Individual Points.'],
+    important:'Earlier reinforcements grant more individual points.',
+  },
+  supply: {
+    icon:'📦', label:'Supply Contest',
+    phases:{
+      prep:['Today\'s priority is Supply Contest.', 'Save your march speed-ups beforehand.'],
+      alert:['Supply Contest begins in less than one hour.'],
+      inProgress:['Don\'t spend resources — focus on saving for contest scoring.'],
+      complete:['Supply Contest has ended.'],
+      recovery:['Prepare for the next scheduled event.'],
+    },
+    objectivesTitle:'SUPPLY CONTEST',
+    objectives:['Check your map and follow the Air Freighter.','Prioritize orange supply drops — worth 500 points individually.'],
+  },
+  capital: {
+    icon:'🏛️', label:'Capital Contest',
+    phases:{
+      prep:['Capital Contest is approaching.', 'Save speedups and stamina.'],
+      alert:['Capital Contest begins in less than one hour.'],
+      inProgress:['Coordinate with alliance and prepare teleports.'],
+      complete:['Capital Contest has ended.'],
+      recovery:['Recover and prepare for the next rotation.'],
+    },
+  },
+};
+
+const PHASE_LABEL = {
+  prep:'PREPARATION PHASE', alert:'BATTLE ALERT', inProgress:'BATTLE IN PROGRESS',
+  complete:'BATTLE COMPLETE', recovery:'RECOVERY PHASE',
+};
+
+const QUOTES = [
+  'Stay sharp, Commander.',
+  'Every point matters.',
+  'Victory favors preparation.',
+  'Your alliance depends on you.',
+  'Small preparations create big victories.',
+  'Keep your troops ready.',
+];
+function pickQuote(){
+  return QUOTES[Math.floor(Date.now()/300000) % QUOTES.length]; // rotates every 5 min
+}
+
+// For a given event type, find the soonest upcoming occurrence and the most
+// recent PAST occurrence (by scanning every schedule entry of that type —
+// not just one slot — since a type can recur more than once within a cycle).
+function getTypeTiming(type, now){
+  const entries = convertedSchedule.filter(e=> e.type===type);
+  if(!entries.length) return null;
+
+  const next = entries.reduce((s,e)=> (!s || e.nextOccurrenceUTC < s.nextOccurrenceUTC) ? e : s, null);
+  const prevUTC = entries.reduce((latest,e)=>{
+    const prevOcc = e.nextOccurrenceUTC - CYCLE_MS;
+    if(prevOcc > now) return latest;
+    return (!latest || prevOcc > latest) ? prevOcc : latest;
+  }, null);
+
+  return { next, prevUTC };
+}
+
+// Determine the current phase for one event type, given "now".
+function getPhaseFor(type, now){
+  const timing = getTypeTiming(type, now);
+  if(!timing) return null;
+  const duration = EVENT_DURATION_MS[type] || 3600000;
+  const sincePrev = timing.prevUTC!==null ? now - timing.prevUTC : Infinity;
+  const toNext = timing.next.nextOccurrenceUTC - now;
+
+  let phase;
+  if(sincePrev >= 0 && sincePrev < duration) phase = 'inProgress';
+  else if(sincePrev >= duration && sincePrev < duration + COMPLETE_GRACE_MS) phase = 'complete';
+  else if(toNext <= ALERT_WINDOW_MS) phase = 'alert';
+  else if(toNext <= PREP_WINDOW_MS) phase = 'prep';
+  else phase = 'recovery';
+
+  return { type, phase, next: timing.next, toNext, sincePrev };
+}
+
+// Pick the single "focus" event/type the AI should talk about right now:
+// prefer whichever type is in an urgent phase (alert/inProgress/complete),
+// breaking ties by priority order; otherwise fall back to whichever type
+// has the soonest upcoming occurrence overall.
+function getFocusStatus(){
+  const now = Date.now();
+  const statuses = FOCUS_ORDER
+    .map(type=> getPhaseFor(type, now))
+    .filter(Boolean);
+
+  const urgent = statuses.filter(s=> s.phase==='alert' || s.phase==='inProgress' || s.phase==='complete');
+  if(urgent.length){
+    urgent.sort((a,b)=> FOCUS_ORDER.indexOf(a.type) - FOCUS_ORDER.indexOf(b.type));
+    return urgent[0];
+  }
+  statuses.sort((a,b)=> a.toNext - b.toNext);
+  return statuses[0] || null;
+}
+
+function buildAIBriefing(){
+  const focus = getFocusStatus();
+  if(!focus){
+    return { phaseLabel:'ONLINE', focusLabel:'All quiet', lines:['No events detected.'], content:null, phase:null };
+  }
+  const content = AI_CONTENT[focus.type];
+  const lines = content.phases[focus.phase] || [];
+  return {
+    phaseLabel: PHASE_LABEL[focus.phase],
+    focusLabel: `${content.icon} ${content.label}`,
+    lines,
+    content,
+    phase: focus.phase,
+    focus,
+  };
+}
+
+function renderAIOfficer(){
+  const el = document.getElementById('aiOfficer');
+  if(!el) return;
+  const b = buildAIBriefing();
+
+  document.getElementById('aiStatus').textContent = b.phaseLabel;
+  document.getElementById('aiStatusLine').innerHTML = b.phase==='inProgress'
+    ? `${b.focusLabel} <span class="ongoing-badge">● ONGOING</span>`
+    : b.focusLabel;
+  document.getElementById('aiBriefing').textContent = b.lines.join('\n');
+
+  // Chain: Current status / Next Event / Countdown — kept minimal per design rules.
+  const next = getNextEvent(convertedSchedule);
+  const chain = [
+    { lbl:'CURRENT', val: b.focusLabel, crit: b.phase==='alert'||b.phase==='inProgress' },
+    { lbl:'NEXT EVENT', val: next ? `${TYPES[next.type].icon} ${TYPES[next.type].label}` : '—', crit:false },
+    { lbl:'COUNTDOWN', val: next ? fmtCountdown(next.nextOccurrenceUTC-Date.now()) : '—', crit:false },
+  ];
+  const chainEl = document.getElementById('aiChain');
+  chainEl.innerHTML = chain.map(c=>
+    `<div class="ai-chain-item${c.crit?' crit':''}"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div></div>`
+  ).join('');
+
+  // Objectives / heroes / reminder — only shown for the focused type, only
+  // during phases where they're actionable (prep / alert / inProgress).
+  const stratEl = document.getElementById('aiStrategy');
+  const sectionEl = document.getElementById('aiObjectivesSection');
+  const showDetail = b.content && b.content.objectives && ['prep','alert','inProgress'].includes(b.phase);
+  if(showDetail){
+    let html = `<li class="ai-obj-title">${b.content.objectivesTitle}</li>`;
+    html += b.content.objectives.map(o=> `<li>${o}</li>`).join('');
+    if(b.content.heroes) html += `<li class="ai-obj-title">RECOMMENDED HEROES</li>` + b.content.heroes.map(h=>`<li>${h}</li>`).join('');
+    if(b.content.reminder) html += `<li class="ai-reminder">${b.content.reminder}</li>`;
+    if(b.content.important) html += `<li class="ai-reminder">${b.content.important}</li>`;
+    stratEl.innerHTML = html;
+    sectionEl.style.display = '';
+  } else {
+    stratEl.innerHTML = '';
+    sectionEl.style.display = 'none';
+  }
+
+  document.getElementById('aiQuote').textContent = '"' + pickQuote() + '"';
+}
+
+// One-time popup (per page load) — same focus/phase logic as the inline
+// card, just presented as bullet points.
+let aiPopupShown = false;
+function maybeShowAIPopup(){
+  if(aiPopupShown) return;
+  const b = buildAIBriefing();
+  if(!b.focus) return;
+
+  const points = [];
+  const ongoingTxt = b.phase==='inProgress' ? ' <b style="color:#ff4d5e;">● ONGOING</b>' : '';
+  points.push({ icon:'📶', text:`${PHASE_LABEL[b.phase]}${ongoingTxt}` });
+  b.lines.forEach(line=> points.push({ icon:'▹', text: line }));
+
+  if(b.content && b.content.objectives && ['prep','alert','inProgress'].includes(b.phase)){
+    b.content.objectives.slice(0,2).forEach(o=> points.push({ icon:'🎯', text:o }));
+  }
+
+  const next = getNextEvent(convertedSchedule);
+  if(next){
+    points.push({ icon:'⏳', text:`Next up: <b>${TYPES[next.type].label}</b> in ${fmtCountdown(next.nextOccurrenceUTC-Date.now())}.` });
+  }
+  points.push({ icon:'💬', text: pickQuote() });
+
+  document.getElementById('aiPopupTitle').textContent = b.focusLabel;
+  document.getElementById('aiPopupPoints').innerHTML = points.map(p=>
+    `<li><span class="pt-icon">${p.icon}</span><span>${p.text}</span></li>`
+  ).join('');
+
+  document.getElementById('aiPopup').classList.remove('hide');
+  aiPopupShown = true;
+}
+document.getElementById('aiPopupClose').onclick = ()=>{
+  document.getElementById('aiPopup').classList.add('hide');
+};
+
+/* ---------------- NEXUS AI — ASK A QUESTION ---------------- */
+// Not a chatbot — a keyword matcher over the exact same convertedSchedule
+// data everything else uses. No independent time math here either.
+const TYPE_ALIASES = {
+  capital:['capital','kapital'],
+  droid:['droid','lancer'],
+  silo:['silo','scramble'],
+  supply:['supply','suplai','suply'],
+  oil:['oil','minyak'],
+  farm:['farm','ladang','pertanian','food','makanan'],
+};
+
+function findMentionedType(q){
+  for(const [type, aliases] of Object.entries(TYPE_ALIASES)){
+    if(aliases.some(a=> q.includes(a))) return type;
+  }
+  return null;
+}
+
+function listEventsForDay(week, dayName){
+  return convertedSchedule
+    .filter(e=> e.week===week && e.dayName===dayName)
+    .sort((a,b)=> a.time.localeCompare(b.time));
+}
+
+function getTomorrowPos(){
+  const idx = DAYS.indexOf(CURRENT_DAY);
+  let week = CURRENT_WEEK, dayIdx = idx+1;
+  if(dayIdx>6){ dayIdx=0; week = week>=4 ? 1 : week+1; }
+  return { week, dayName: DAYS[dayIdx] };
+}
+
+// Day-based friendly phrasing ("today", "tomorrow", "on Tuesday") instead of
+// a precise HH:MM:SS countdown — used only for Ask NEXUS AI answers; the
+// calendar/countdown UI elsewhere still shows exact live countdowns.
+function daysFromToday(occUTC){
+  const off = (viewerOffsetHours===null||viewerOffsetHours===undefined) ? SERVER_UTC_OFFSET : viewerOffsetHours;
+  const startOfLocalDay = ms=>{
+    const d = new Date(ms + off*3600000);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  };
+  return Math.round((startOfLocalDay(occUTC) - startOfLocalDay(Date.now())) / 86400000);
+}
+function friendlyWhen(event){
+  const diff = daysFromToday(event.nextOccurrenceUTC);
+  let dayLabel;
+  if(diff<=0) dayLabel = 'today';
+  else if(diff===1) dayLabel = 'tomorrow';
+  else if(diff<7) dayLabel = `on ${event.dayName}`;
+  else dayLabel = `on ${event.dayName} (Week ${event.week})`;
+  return `${dayLabel} at ${event.time}`;
+}
+
+function answerQuery(raw){
+  const q = raw.toLowerCase().trim();
+  if(!q) return "Ask me something like \"kapan capital?\" or \"hari ini ada apa?\"";
+
+  const type = findMentionedType(q);
+  if(type){
+    const timing = getTypeTiming(type, Date.now());
+    if(!timing) return `I don't have any ${TYPES[type].label} events on record.`;
+    const phase = getPhaseFor(type, Date.now());
+    const ongoing = phase && phase.phase==='inProgress' ? ' It\'s ongoing right now!' : '';
+    return `${TYPES[type].icon} <b>${TYPES[type].label}</b> is next ${friendlyWhen(timing.next)}.${ongoing}`;
+  }
+
+  if(q.includes('besok') || q.includes('tomorrow')){
+    const t = getTomorrowPos();
+    const events = listEventsForDay(t.week, t.dayName);
+    if(!events.length) return `Tomorrow (${t.dayName}) has no scheduled events — a good recovery day.`;
+    return `Tomorrow (<b>${t.dayName}</b>): ` + events.map(e=> `${TYPES[e.type].icon} ${TYPES[e.type].label} at ${e.time}`).join(', ');
+  }
+
+  if(q.includes('hari ini') || q.includes('today')){
+    const events = listEventsForDay(CURRENT_WEEK, CURRENT_DAY);
+    if(!events.length) return `Today (${CURRENT_DAY}) has no scheduled events — good time to gather and help the alliance.`;
+    return `Today (<b>${CURRENT_DAY}</b>): ` + events.map(e=> `${TYPES[e.type].icon} ${TYPES[e.type].label} at ${e.time}`).join(', ');
+  }
+
+  if(q.includes('next') || q.includes('selanjut') || q.includes('berikut') || q.includes('nanti')){
+    const next = getNextEvent(convertedSchedule);
+    if(!next) return `No upcoming events found.`;
+    return `Next up: ${TYPES[next.type].icon} <b>${TYPES[next.type].label}</b> ${friendlyWhen(next)}.`;
+  }
+
+  if(q.includes('siap') || q.includes('prepare') || q.includes('todo') || q.includes('harus') || q.includes('objective') || q.includes('tips')){
+    const b = buildAIBriefing();
+    if(b.content && b.content.objectives && ['prep','alert','inProgress'].includes(b.phase)){
+      return `For <b>${b.focusLabel}</b>: ` + b.content.objectives.join(' ');
+    }
+    return b.lines.join(' ');
+  }
+
+  if(q.includes('minggu') || q.includes('week')){
+    return `We're currently in <b>Week ${CURRENT_WEEK}</b>, ${CURRENT_DAY}. The rotation repeats every 4 weeks.`;
+  }
+
+  // fallback — current focus status
+  const b = buildAIBriefing();
+  return `I'm currently focused on <b>${b.focusLabel}</b> (${PHASE_LABEL[b.phase]}). Try asking "kapan capital?", "hari ini ada apa?", "besok apa?", or "apa yang harus aku siapin?"`;
+}
+
+function askNexusAI(){
+  const input = document.getElementById('aiAskInput');
+  const q = input.value;
+  if(!q.trim()) return;
+  const answerEl = document.getElementById('aiAnswer');
+  answerEl.innerHTML = '🧠 ' + answerQuery(q);
+  answerEl.classList.add('show');
+  input.value = '';
+}
+document.getElementById('aiAskBtn').onclick = askNexusAI;
+document.getElementById('aiAskInput').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter') askNexusAI();
+});
+
+function render(){
+  refreshCurrentPosition();
+  refreshConvertedSchedule();
+  buildTzBanner();
+  buildCycleTabs();
+  buildLegend();
+  buildCalendar();
+  renderAIOfficer();
+  scrollToTodayOnce();
+}
+
+function scrollToTodayOnce(){
+  if(hasAutoScrolled) return;
+  if(activeWeek !== CURRENT_WEEK) return;
+  const target = document.querySelector('.day-card.is-today');
+  if(!target) return;
+  hasAutoScrolled = true;
+  setTimeout(()=>{
+    target.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 150);
+}
+
+// Keep "today"/countdown data fresh even if the tab is left open across a
+// day change — full re-render since convertedSchedule itself may shift.
+setInterval(()=>{
+  const before = CURRENT_WEEK+'-'+CURRENT_DAY;
+  refreshCurrentPosition();
+  if(before !== CURRENT_WEEK+'-'+CURRENT_DAY){
+    render();
+  }
+}, 60000);
+
+document.getElementById('notesToggle').onclick = ()=>{
+  document.getElementById('notesPanel').classList.toggle('open');
+};
+
+/* ---------------- CALENDAR EXPORT (.ics) ---------------- */
+function pad2ics(n){ return String(n).padStart(2,'0'); }
+function toICSDate(ms){
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}${pad2ics(d.getUTCMonth()+1)}${pad2ics(d.getUTCDate())}T${pad2ics(d.getUTCHours())}${pad2ics(d.getUTCMinutes())}${pad2ics(d.getUTCSeconds())}Z`;
+}
+function generateICS(){
+  const now = Date.now();
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Nexus Phoenix//Alliance Event Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'X-WR-CALNAME:Nexus Phoenix — Alliance Events',
+  ];
+  SCHEDULE.forEach((raw, i)=>{
+    const start = occurrenceUTC(raw.week, raw.day, raw.time);
+    const label = TYPES[raw.type] ? TYPES[raw.type].label : raw.type;
+    const uid = `nexus-w${raw.week}-d${raw.day}-${raw.time.replace(':','')}-${raw.type}@phoenix`;
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${toICSDate(now)}`,
+      `DTSTART:${toICSDate(start)}`,
+      'DURATION:PT30M',
+      'RRULE:FREQ=WEEKLY;INTERVAL=4',
+      `SUMMARY:${label} (Server Time)`,
+      `DESCRIPTION:Alliance ${label} — recurring every 4 weeks (Week ${raw.week} of rotation). Time shown in server time (SVT/UTC+8); your calendar app will convert automatically to your device's timezone.`,
+      'BEGIN:VALARM',
+      'TRIGGER:-PT1H',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${label} starts in 1 hour`,
+      'END:VALARM',
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+async function downloadICS(){
+  const ics = generateICS();
+  const filename = 'nexus-phoenix-alliance-events.ics';
+
+  // 1) Web Share API with file — most reliable on mobile, opens the native
+  //    share sheet where the person can pick "Save to Files" / "Add to
+  //    Calendar" directly. Works on modern iOS Safari + Android Chrome.
+  try{
+    if(navigator.canShare){
+      const file = new File([ics], filename, { type:'text/calendar' });
+      if(navigator.canShare({ files:[file] })){
+        await navigator.share({ files:[file], title:'Alliance Event Calendar' });
+        showToast('📆 Shared — choose "Save to Files" or your Calendar app.');
+        return;
+      }
+    }
+  }catch(e){ /* user cancelled share sheet, or unsupported — fall through */ }
+
+  // 2) Classic blob download link — works on desktop browsers reliably.
+  try{
+    const blob = new Blob([ics], { type:'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=> URL.revokeObjectURL(url), 4000);
+    showToast('📆 Calendar file downloaded — open it to import.');
+    return;
+  }catch(e){ /* fall through to last resort */ }
+
+  // 3) Last resort — open as a data: URI in a new tab. Some mobile browsers
+  //    will offer to open this directly in the Calendar app.
+  try{
+    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    window.open(dataUri, '_blank');
+    showToast('📆 Opened in a new tab — use "Open in Calendar" if prompted.');
+  }catch(e){
+    showToast('⚠️ Could not export automatically. Try a different browser.');
+  }
+}
+document.getElementById('exportFab').onclick = downloadICS;
+
+/* Starfield is now pure CSS (see .starfield/.star-layer rules) — no JS
+   needed, which avoids the canvas/rAF reliability issues on mobile browsers
+   that caused it to appear frozen. */
+
+
+refreshCurrentPosition();
+activeWeek = CURRENT_WEEK;
+setupModal();
+</script>
+</body>
+</html>
