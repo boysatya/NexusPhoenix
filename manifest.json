@@ -1,0 +1,14 @@
+{
+  "name": "Nexus Phoenix — Alliance Event Calendar",
+  "short_name": "Nexus Phoenix",
+  "description": "Alliance event schedule, live countdowns, and NEXUS AI operations officer for Top War.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#06070d",
+  "theme_color": "#06070d",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
